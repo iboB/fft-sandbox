@@ -3,7 +3,7 @@
 #
 cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
-project(my_app_template
+project(fft-sandbox
     LANGUAGES C CXX
 )
 
