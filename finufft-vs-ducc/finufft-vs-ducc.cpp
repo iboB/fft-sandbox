@@ -22,6 +22,8 @@ PRAGMA_WARNING_POP
 using std::numbers::pi;
 
 void test_1d(unsigned seed) {
+    std::cout << "1D\n";
+
     std::minstd_rand rng(seed);
 
     constexpr int K_SIZE = 16;
@@ -85,7 +87,7 @@ void test_1d(unsigned seed) {
         );
 
         nufft.nu2u(
-            true, // forward
+            false, // forward
             0, // verbosity
             ducc0::cmav<std::complex<double>, 1>{ks.data(), {ks.size()}},
             ducc0::vfmav<std::complex<double>>{r_ducc.data(), {r_ducc.size()}}
@@ -104,7 +106,7 @@ void test_1d(unsigned seed) {
 
 int main() {
     unsigned seed = 42; // std::random_device{}();
-    std::cout << "random seed: " << seed << std::endl;
+    std::cout << "random seed: " << seed << "\n";
 
     test_1d(seed);
 
