@@ -21,43 +21,38 @@ PRAGMA_WARNING_POP
 
 using std::numbers::pi;
 
+double rnd(std::minstd_rand &rng) {
+    return double(rng()) / std::numeric_limits<unsigned>::max();
+}
+
 void test_1d(unsigned seed) {
     std::cout << "1D\n";
 
-    std::minstd_rand rng(seed);
-
     constexpr int K_SIZE = 16;
+    constexpr int U_SIZE = 15;
+    constexpr double EPS = 1e-6;
+
+    std::minstd_rand rng(seed);
 
     // can't be const because of bad finufft interface
     const auto xs = [&]() {
         std::vector<double> ret;
         double cur = -2;
         for (int i = 0; i < K_SIZE; ++i) {
-            cur += double(rng()) / std::numeric_limits<unsigned>::max();
+            cur += rnd(rng);
             ret.push_back(cur);
         }
         return ret;
     }();
-
     const auto ks = [&]() {
         std::vector<std::complex<double>> ret;
         for (int i = 0; i < K_SIZE; ++i) {
-            double real = double(rng()) / std::numeric_limits<unsigned>::max();
-            real *= 2;
-            real -= 1;
-            double imag = double(rng()) / std::numeric_limits<unsigned>::max();
-            imag *= 2;
-            imag -= 1;
+            double real = 2 * rnd(rng) - 1;
+            double imag = 2 * rnd(rng) - 1;
             ret.push_back(std::complex<double>(real, imag));
         }
-
         return ret;
     }();
-
-    constexpr int U_SIZE = 15;
-
-    constexpr double EPS = 1e-6;
-
 
     std::vector<std::complex<double>> r_finufft(U_SIZE);
     {
@@ -67,7 +62,7 @@ void test_1d(unsigned seed) {
         finufft_opts opts;
         finufft_default_opts(&opts);
         opts.nthreads = 1;
-        finufft1d1(K_SIZE, fxs.data(), fks.data(), /* fft order= */ 1, EPS, U_SIZE, r_finufft.data(), &opts);
+        finufft1d1(K_SIZE, fxs.data(), fks.data(), /* iflag= */ 1, EPS, U_SIZE, r_finufft.data(), &opts);
     }
 
     std::vector<std::complex<double>> r_ducc(U_SIZE);
@@ -82,7 +77,7 @@ void test_1d(unsigned seed) {
             1, // nthreads
             1.5, 2.5, // sigma min-max
             {2 * pi}, // periodicty
-            false, // fft order
+            false, // fft_order
             {0} //origin
         );
 
@@ -94,10 +89,10 @@ void test_1d(unsigned seed) {
         );
     }
 
-    std::cout << "finufft            ducc\n";
+    std::cout << "finufft          |  ducc\n";
     for (int i = 0; i < U_SIZE; ++i) {
         std::cout << std::format(
-            "{:+4.4f}{:+4.4f}i    {:+4.4f}{:+4.4f}i\n",
+            "{:+4.4f}{:+4.4f}i  |  {:+4.4f}{:+4.4f}i\n",
             r_finufft[i].real(), r_finufft[i].imag(),
             r_ducc[i].real(), r_ducc[i].imag()
         );
