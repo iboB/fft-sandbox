@@ -37,6 +37,11 @@ std::vector<double> make_coord_vec(int N, std::minstd_rand& rng) {
 
 constexpr double EPS = 1e-6;
 
+static constexpr bool forward_fourier = false;
+
+constexpr int finufft_sign = forward_fourier ? -1 : 1;
+constexpr bool ducc_forward = forward_fourier;
+
 void test_1d(
     const std::vector<double>& xs,
     const std::vector<std::complex<double>>& ks,
@@ -58,7 +63,7 @@ void test_1d(
             K_SIZE,
             fxs.data(),
             fks.data(),
-            1, // inverse fourier
+            finufft_sign,
             EPS,
             U_SIZE,
             r_finufft.data(),
@@ -83,7 +88,7 @@ void test_1d(
         );
 
         nufft.nu2u(
-            false, // forward = false (inverse fourier)
+            ducc_forward,
             0, // verbosity
             ducc0::cmav<std::complex<double>, 1>{ks.data(), {ks.size()}},
             ducc0::vfmav<std::complex<double>>{r_ducc.data(), {r_ducc.size()}}
@@ -125,7 +130,7 @@ void test_2d(
             K_SIZE,
             fxs.data(), fys.data(),
             fks.data(),
-            1, // inverse fourier
+            finufft_sign,
             EPS,
             U_SIZE_X, U_SIZE_Y,
             r_finufft.data(),
@@ -148,7 +153,7 @@ void test_2d(
         std::vector<size_t> ushape = {size_t(U_SIZE_Y), size_t(U_SIZE_X)};
 
         ducc0::Nufft<double, double, double> nufft(
-            false,
+            true,
             vdcoords,
             ushape,
             EPS,
@@ -160,7 +165,7 @@ void test_2d(
         );
 
         nufft.nu2u(
-            false, // forward = false (inverse fourier)
+            ducc_forward,
             0, // verbosity
             ducc0::cmav<std::complex<double>, 1>{ks.data(), {ks.size()}},
             ducc0::vfmav<std::complex<double>>{r_ducc.data(), ushape}
@@ -214,7 +219,7 @@ void test_3d(
             K_SIZE,
             fxs.data(), fys.data(), fzs.data(),
             fks.data(),
-            1, // inverse fourier
+            finufft_sign,
             EPS,
             U_SIZE_X, U_SIZE_Y, U_SIZE_Z,
             r_finufft.data(),
@@ -231,12 +236,12 @@ void test_3d(
             dcoords[i * 2 + 0] = zs[i];
         }
 
-        ducc0::cmav<double, 2> vdcoords(dcoords.data(), {size_t(K_SIZE), 2});
+        ducc0::cmav<double, 2> vdcoords(dcoords.data(), {size_t(K_SIZE), 3});
 
         std::vector<size_t> ushape = {size_t(U_SIZE_Z), size_t(U_SIZE_Y), size_t(U_SIZE_X)};
 
         ducc0::Nufft<double, double, double> nufft(
-            false,
+            true,
             vdcoords,
             ushape,
             EPS,
@@ -248,7 +253,7 @@ void test_3d(
         );
 
         nufft.nu2u(
-            false, // forward = false (inverse fourier)
+            ducc_forward,
             0, // verbosity
             ducc0::cmav<std::complex<double>, 1>{ks.data(), {ks.size()}},
             ducc0::vfmav<std::complex<double>>{r_ducc.data(), ushape}
