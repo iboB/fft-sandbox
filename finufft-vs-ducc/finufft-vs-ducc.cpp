@@ -35,6 +35,10 @@ std::vector<double> make_coord_vec(int N, std::minstd_rand& rng) {
     return ret;
 }
 
+std::string complex_format(const std::complex<double>& c) {
+    return std::format("{:+4.4f}{:+4.4f}i", c.real(), c.imag());
+}
+
 constexpr double EPS = 1e-6;
 
 static constexpr bool forward_fourier = false;
@@ -97,11 +101,7 @@ void test_1d(
 
     std::cout << "finufft          |  ducc\n";
     for (int i = 0; i < U_SIZE; ++i) {
-        std::cout << std::format(
-            "{:+4.4f}{:+4.4f}i  |  {:+4.4f}{:+4.4f}i\n",
-            r_finufft[i].real(), r_finufft[i].imag(),
-            r_ducc[i].real(), r_ducc[i].imag()
-        );
+        std::cout << complex_format(r_finufft[i]) << " | " << complex_format(r_ducc[i]) << "\n";
     }
 }
 
@@ -177,14 +177,8 @@ void test_2d(
         std::string finufft_row, ducc_row;
         for (int x = 0; x < U_SIZE_X; ++x) {
             const auto i = y * U_SIZE_X + x;
-            finufft_row += std::format(
-                "{:+4.4f}{:+4.4f}i ",
-                r_finufft[i].real(), r_finufft[i].imag()
-            );
-            ducc_row += std::format(
-                "{:+4.4f}{:+4.4f}i ",
-                r_ducc[i].real(), r_ducc[i].imag()
-            );
+            finufft_row += complex_format(r_finufft[i]) + " ";
+            ducc_row += complex_format(r_ducc[i]) + " ";
         }
         std::cout << finufft_row << " |  " << ducc_row;
         std::cout << "\n";
@@ -266,14 +260,8 @@ void test_3d(
             std::string finufft_row, ducc_row;
             for (int x = 0; x < U_SIZE_X; ++x) {
                 const auto i = z * U_SIZE_Y * U_SIZE_X + y * U_SIZE_X + x;
-                finufft_row += std::format(
-                    "{:+4.4f}{:+4.4f}i ",
-                    r_finufft[i].real(), r_finufft[i].imag()
-                );
-                ducc_row += std::format(
-                    "{:+4.4f}{:+4.4f}i ",
-                    r_ducc[i].real(), r_ducc[i].imag()
-                );
+                finufft_row += complex_format(r_finufft[i]) + " ";
+                ducc_row += complex_format(r_ducc[i]) + " ";
             }
             std::cout << finufft_row << " |  " << ducc_row;
             std::cout << "\n";
