@@ -225,9 +225,9 @@ void test_3d(
     {
         std::vector<double> dcoords(K_SIZE * 3);
         for (int i = 0; i < K_SIZE; ++i) {
-            dcoords[i * 2 + 2] = xs[i];
-            dcoords[i * 2 + 1] = ys[i];
-            dcoords[i * 2 + 0] = zs[i];
+            dcoords[i * 3 + 2] = xs[i];
+            dcoords[i * 3 + 1] = ys[i];
+            dcoords[i * 3 + 0] = zs[i];
         }
 
         ducc0::cmav<double, 2> vdcoords(dcoords.data(), {size_t(K_SIZE), 3});
