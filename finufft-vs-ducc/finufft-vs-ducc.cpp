@@ -63,16 +63,12 @@ void test_1d(
         finufft_opts opts;
         finufft_default_opts(&opts);
         opts.nthreads = 1;
-        finufft1d1(
-            K_SIZE,
-            fxs.data(),
-            fks.data(),
-            finufft_sign,
-            EPS,
-            U_SIZE,
-            r_finufft.data(),
-            &opts
-        );
+        int64_t nmodes = U_SIZE;
+        finufft_plan plan;
+        finufft_makeplan(1, 1, &nmodes, finufft_sign, 1, EPS, &plan, &opts);
+        finufft_setpts(plan, K_SIZE, fxs.data(), nullptr, nullptr, 0, nullptr, nullptr, nullptr);
+        finufft_execute(plan, fks.data(), r_finufft.data());
+        finufft_destroy(plan);
     }
 
     std::vector<std::complex<double>> r_ducc(U_SIZE);
@@ -125,17 +121,12 @@ void test_2d(
         finufft_opts opts;
         finufft_default_opts(&opts);
         opts.nthreads = 1;
-
-        finufft2d1(
-            K_SIZE,
-            fxs.data(), fys.data(),
-            fks.data(),
-            finufft_sign,
-            EPS,
-            U_SIZE_X, U_SIZE_Y,
-            r_finufft.data(),
-            &opts
-        );
+        int64_t nmodes[] = {U_SIZE_X, U_SIZE_Y};
+        finufft_plan plan;
+        finufft_makeplan(1, 2, nmodes, finufft_sign, 1, EPS, &plan, &opts);
+        finufft_setpts(plan, K_SIZE, fxs.data(), fys.data(), nullptr, 0, nullptr, nullptr, nullptr);
+        finufft_execute(plan, fks.data(), r_finufft.data());
+        finufft_destroy(plan);
     }
 
     // NOTE:
@@ -208,17 +199,12 @@ void test_3d(
         finufft_opts opts;
         finufft_default_opts(&opts);
         opts.nthreads = 1;
-
-        finufft3d1(
-            K_SIZE,
-            fxs.data(), fys.data(), fzs.data(),
-            fks.data(),
-            finufft_sign,
-            EPS,
-            U_SIZE_X, U_SIZE_Y, U_SIZE_Z,
-            r_finufft.data(),
-            &opts
-        );
+        int64_t nmodes[] = {U_SIZE_X, U_SIZE_Y, U_SIZE_Z};
+        finufft_plan plan;
+        finufft_makeplan(1, 3, nmodes, finufft_sign, 1, EPS, &plan, &opts);
+        finufft_setpts(plan, K_SIZE, fxs.data(), fys.data(), fzs.data(), 0, nullptr, nullptr, nullptr);
+        finufft_execute(plan, fks.data(), r_finufft.data());
+        finufft_destroy(plan);
     }
 
     std::vector<std::complex<double>> r_ducc(r_finufft.size());
