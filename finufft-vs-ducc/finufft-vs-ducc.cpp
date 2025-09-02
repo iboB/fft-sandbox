@@ -207,6 +207,8 @@ void test_3d(
         finufft_destroy(plan);
     }
 
+    // NOTE:
+    // as with 2d xy: x and z are swapped in ducc, both in shape and in coords
     std::vector<std::complex<double>> r_ducc(r_finufft.size());
     {
         std::vector<double> dcoords(K_SIZE * 3);
