@@ -207,7 +207,8 @@ int main() {
     std::minstd_rand rng(seed);
 
     dataset_3d ds[] = {
-        dataset_3d::generate_random({100, 100, 30}, 40160, 10, rng)
+        dataset_3d::generate_random({100, 100, 30}, 40160, 10, rng),
+        dataset_3d::generate_random({200, 200, 60}, 40160, 10, rng)
     };
 
     for (auto& d : ds) {
