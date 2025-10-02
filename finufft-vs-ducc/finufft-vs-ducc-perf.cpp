@@ -19,7 +19,7 @@ PRAGMA_WARNING_POP
 #include <string>
 #include <format>
 
-using m_float_t = double;
+using m_float_t = float;
 
 using std::numbers::pi;
 
@@ -115,7 +115,7 @@ struct dataset_3d {
     }
 };
 
-constexpr m_float_t EPS = 1e-6;
+constexpr auto EPS = m_float_t(1e-3);
 
 static constexpr bool forward_fourier = false;
 constexpr int finufft_sign = forward_fourier ? -1 : 1;
@@ -130,13 +130,13 @@ double bench_finufft_3d(dataset_3d& d) {
     finufft_default_opts(&opts);
     opts.nthreads = num_threads;
 
-    finufft_plan plan;
+    finufftf_plan plan;
 
     std::cout << "finufft:\n";
     {
         bench_scope b("  plan");
-        finufft_makeplan(1, 3, nmodes, finufft_sign, 1, EPS, &plan, &opts);
-        finufft_setpts(plan, d.xs.size(), d.xs.data(), d.ys.data(), d.zs.data(), 0, nullptr, nullptr, nullptr);
+        finufftf_makeplan(1, 3, nmodes, finufft_sign, 1, EPS, &plan, &opts);
+        finufftf_setpts(plan, d.xs.size(), d.xs.data(), d.ys.data(), d.zs.data(), 0, nullptr, nullptr, nullptr);
     }
 
     std::vector<std::complex<m_float_t>> output(d.output_shape[0] * d.output_shape[1] * d.output_shape[2]);
@@ -146,7 +146,7 @@ double bench_finufft_3d(dataset_3d& d) {
     for (auto& ks : d.samples) {
         {
             bench_scope b("  exec");
-            finufft_execute(plan, ks.data(), output.data());
+            finufftf_execute(plan, ks.data(), output.data());
         }
         // prevent optimizing out
         for (auto v : output) {
@@ -154,7 +154,7 @@ double bench_finufft_3d(dataset_3d& d) {
         }
     }
 
-    finufft_destroy(plan);
+    finufftf_destroy(plan);
 
     return dump;
 }
