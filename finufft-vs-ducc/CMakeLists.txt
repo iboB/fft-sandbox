@@ -8,17 +8,21 @@ CPMAddPackage(
         "FINUFFT_USE_DUCC0 ON"
 )
 
-set(tgt finufft-vs-ducc)
-add_executable(${tgt} ${tgt}.cpp)
-target_link_libraries(${tgt} PRIVATE
-    splat::splat
-    finufft
-    ducc0
-)
+function(add_fvd_exe tgt)
+    add_executable(${tgt} ${tgt}.cpp)
+    target_link_libraries(${tgt} PRIVATE
+        splat::splat
+        finufft
+        ducc0
+    )
 
-# required by finufft config
-set_target_properties(
-    ${tgt}
-    PROPERTIES
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
-)
+    # required by finufft config
+    set_target_properties(
+        ${tgt}
+        PROPERTIES
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endfunction()
+
+add_fvd_exe(finufft-vs-ducc-val)
+add_fvd_exe(finufft-vs-ducc-perf)
