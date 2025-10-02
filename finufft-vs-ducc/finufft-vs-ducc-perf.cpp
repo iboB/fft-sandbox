@@ -23,20 +23,6 @@ using m_float_t = double;
 
 using std::numbers::pi;
 
-m_float_t rnd(std::minstd_rand &rng) {
-    return m_float_t(rng()) / std::numeric_limits<unsigned>::max();
-}
-
-std::vector<m_float_t> make_coord_vec(int N, std::minstd_rand& rng) {
-    std::vector<m_float_t> ret;
-    m_float_t cur = -2;
-    for (int i = 0; i < N; ++i) {
-        cur += rnd(rng);
-        ret.push_back(cur);
-    }
-    return ret;
-}
-
 struct bench_scope {
     std::string_view name;
     std::optional<size_t> size;
@@ -81,15 +67,29 @@ struct dataset_3d {
     std::vector<m_float_t> xs, ys, zs; // finufft-friendly format
     std::vector<m_float_t> zyxs; // ducc-friendly format
 
-    std::vector<std::vector<std::complex<m_float_t>>> k_samples;
+    std::vector<std::vector<std::complex<m_float_t>>> samples;
 
-    static dataset_3d generate_random(std::array<int, 3> shape, int sample_size, int num_k_samples, std::minstd_rand& rng) {
+    static dataset_3d generate_random(std::array<int, 3> shape, int sample_size, int num_samples, std::minstd_rand& rng) {
+        auto rnd = [&]() {
+            return float(double(rng()) / std::numeric_limits<unsigned>::max());
+        };
+
+        auto make_coord_vec = [&]() {
+            std::vector<m_float_t> ret;
+            m_float_t cur = -m_float_t(sample_size) / 4;
+            for (int i = 0; i < sample_size; ++i) {
+                cur += rnd();
+                ret.push_back(cur);
+            }
+            return ret;
+        };
+
         dataset_3d ret;
         ret.output_shape = shape;
 
-        ret.xs = make_coord_vec(sample_size, rng);
-        ret.ys = make_coord_vec(sample_size, rng);
-        ret.zs = make_coord_vec(sample_size, rng);
+        ret.xs = make_coord_vec();
+        ret.ys = make_coord_vec();
+        ret.zs = make_coord_vec();
 
         ret.zyxs.resize(sample_size * 3);
         for (int i = 0; i < sample_size; ++i) {
@@ -99,14 +99,14 @@ struct dataset_3d {
             ret.zyxs[i * 3 + 0] = ret.zs[i];
         }
 
-        ret.k_samples.reserve(num_k_samples);
+        ret.samples.reserve(num_samples);
 
-        for (int s = 0; s < num_k_samples; ++s) {
-            auto& ks = ret.k_samples.emplace_back();
+        for (int s = 0; s < num_samples; ++s) {
+            auto& ks = ret.samples.emplace_back();
             ks.reserve(sample_size);
             for (int i = 0; i < sample_size; ++i) {
-                m_float_t real = 2 * rnd(rng) - 1;
-                m_float_t imag = 2 * rnd(rng) - 1;
+                m_float_t real = 2 * rnd() - 1;
+                m_float_t imag = 2 * rnd() - 1;
                 ks.push_back({real, imag});
             }
         }
@@ -121,7 +121,7 @@ static constexpr bool forward_fourier = false;
 constexpr int finufft_sign = forward_fourier ? -1 : 1;
 constexpr bool ducc_forward = forward_fourier;
 
-static constexpr int num_threads = 1;
+static constexpr int num_threads = 4;
 
 double bench_finufft_3d(dataset_3d& d) {
     int64_t nmodes[] = {d.output_shape[0], d.output_shape[1], d.output_shape[2]};
@@ -143,7 +143,7 @@ double bench_finufft_3d(dataset_3d& d) {
 
     double dump = 0;
 
-    for (auto& ks : d.k_samples) {
+    for (auto& ks : d.samples) {
         {
             bench_scope b("  exec");
             finufft_execute(plan, ks.data(), output.data());
@@ -182,7 +182,7 @@ double bench_ducc_3d(dataset_3d& d) {
     std::vector<std::complex<m_float_t>> output(ushape[0] * ushape[1] * ushape[2]);
 
     double dump = 0;
-    for (auto& ks : d.k_samples) {
+    for (auto& ks : d.samples) {
         {
             bench_scope b("  exec");
             nufft.nu2u(
@@ -207,7 +207,7 @@ int main() {
     std::minstd_rand rng(seed);
 
     dataset_3d ds[] = {
-        dataset_3d::generate_random({100, 100, 30}, 40200, 10, rng)
+        dataset_3d::generate_random({100, 100, 30}, 40160, 10, rng)
     };
 
     for (auto& d : ds) {
